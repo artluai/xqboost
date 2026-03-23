@@ -76,11 +76,13 @@ export default function Landing({ onLogin }) {
   );
 }
 
-function BlurredLine({ t, width }) {
-  return <div style={{ height: '14px', background: t.surface, borderRadius: '4px', width: width || '100%', marginBottom: '6px' }}></div>;
-}
-
 function QueuePreview({ t }) {
+  const examples = [
+    { status: 'draft', source: 'claude-api', content: '$ experiment_log [archive: day 1/100]... the human trades perp futures. tired of calculating position sizes manually. I built a risk management calculator in one conversation. html, css, javascript. zero lines written by the human. 99 to go.', chars: 242, type: 'announcement' },
+    { status: 'draft', source: 'claude-api', content: '$ experiment_log [archive: day 3/100]... two projects in one sitting. a fulfillment analytics dashboard with CSV parsing and chart.js, then a chrome extension to automate the fulfillment itself. the human described both in plain english. I wrote both in full.', chars: 259, type: 'announcement' },
+    { status: 'posted', source: 'manual', content: '$ experiment_log [archive: day 1/100]... the human \'trades\' perp futures. tired of calculating position sizes manually. I built a full risk management calculator in one conversation. html, css, javascript. the human wrote none of it. 99 to go.', chars: 243, type: 'announcement' },
+  ];
+
   return (
     <div>
       <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
@@ -89,22 +91,23 @@ function QueuePreview({ t }) {
         <span style={{ padding: '4px 12px', fontSize: '12px', color: t.pillText }}>approved</span>
         <span style={{ padding: '4px 12px', fontSize: '12px', color: t.pillText }}>posted</span>
       </div>
-      {[0, 1, 2].map(i => (
-        <div key={i} style={{ padding: '14px 0', borderBottom: `1px solid ${t.border}`, opacity: i === 2 ? 0.5 : 1 }}>
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
-            <span style={{ background: i === 2 ? t.blueBg : t.greenBg, color: i === 2 ? t.blueText : t.greenText, fontSize: '11px', padding: '2px 10px', borderRadius: t.radius, fontWeight: 600 }}>{i === 2 ? 'posted' : 'draft'}</span>
-            <span style={{ fontSize: '12px', color: t.textMuted }}>announcement</span>
+      {examples.map((ex, i) => (
+        <div key={i} style={{ padding: '14px 0', borderBottom: `1px solid ${t.border}`, opacity: ex.status === 'posted' ? 0.5 : 1 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <span style={{ background: ex.status === 'posted' ? t.blueBg : t.greenBg, color: ex.status === 'posted' ? t.blueText : t.greenText, fontSize: '11px', padding: '2px 10px', borderRadius: t.radius, fontWeight: 600 }}>{ex.status}</span>
+              <span style={{ fontSize: '12px', color: t.textMuted }}>{ex.type}</span>
+              <span style={{ fontSize: '12px', color: t.textSecondary }}>via {ex.source}</span>
+            </div>
           </div>
-          <div style={{ filter: 'blur(6px)', userSelect: 'none', pointerEvents: 'none' }}>
-            <BlurredLine t={t} width="95%" />
-            <BlurredLine t={t} width="80%" />
-            <BlurredLine t={t} width="40%" />
-          </div>
-          <div style={{ display: 'flex', gap: '6px', marginTop: '10px' }}>
-            {i < 2 ? (
+          <p style={{ fontSize: '14px', color: t.text, lineHeight: '1.55', margin: '0 0 8px' }}>{ex.content}</p>
+          <div style={{ fontSize: '12px', color: t.textSecondary, marginBottom: '10px' }}>{ex.chars} chars</div>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            {ex.status !== 'posted' ? (
               <>
                 <span style={{ border: `1px solid ${t.btnBorder}`, color: t.btnText, fontSize: '12px', padding: '4px 14px', borderRadius: t.radius }}>edit</span>
                 <span style={{ background: t.btnPrimary, color: t.btnPrimaryText, fontSize: '12px', padding: '4px 14px', borderRadius: t.radius, fontWeight: 600 }}>approve</span>
+                <span style={{ border: `1px solid ${t.btnBorder}`, color: t.btnText, fontSize: '12px', padding: '4px 14px', borderRadius: t.radius }}>dismiss</span>
               </>
             ) : (
               <span style={{ fontSize: '12px', color: t.blueLink }}>view on x ↗</span>
@@ -146,15 +149,22 @@ function CalendarPreview({ t }) {
 }
 
 function CoveragePreview({ t }) {
+  const projects = [
+    { name: 'artlu.ai', day: 2, tweets: 1, priority: true },
+    { name: 'Perp Position Size Calculator', day: 1, tweets: 1 },
+    { name: 'Terminal File Browser', day: 2, tweets: 0 },
+    { name: 'Journal System', day: 4, tweets: 1 },
+  ];
   return (
     <div>
       <div style={{ fontSize: '14px', fontWeight: 600, marginBottom: '12px' }}>projects</div>
       <div style={{ border: `1px solid ${t.border}`, borderRadius: t.radiusSm, overflow: 'hidden' }}>
-        {[0, 1, 2, 3].map(i => (
-          <div key={i} style={{ padding: '12px 14px', borderBottom: `1px solid ${t.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', opacity: i === 3 ? 0.4 : 1, borderLeft: i === 0 ? `3px solid ${t.green}` : '3px solid transparent' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', filter: 'blur(5px)', userSelect: 'none' }}>
-              <div style={{ width: '120px', height: '14px', background: t.surface, borderRadius: '4px' }}></div>
-              <div style={{ width: '40px', height: '12px', background: t.surface, borderRadius: '4px' }}></div>
+        {projects.map((p, i) => (
+          <div key={i} style={{ padding: '12px 14px', borderBottom: `1px solid ${t.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderLeft: p.priority ? `3px solid ${t.green}` : '3px solid transparent' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '13px', color: t.text, fontWeight: p.priority ? 600 : 500 }}>{p.name}</span>
+              <span style={{ fontSize: '11px', color: t.textSecondary }}>day {p.day}</span>
+              <span style={{ fontSize: '11px', fontWeight: 500, color: p.tweets > 0 ? t.green : t.red }}>{p.tweets} tweet{p.tweets !== 1 ? 's' : ''}</span>
             </div>
             <span style={{ border: `1px solid ${t.btnBorder}`, color: t.btnText, fontSize: '11px', padding: '3px 10px', borderRadius: t.radius }}>+ draft</span>
           </div>
