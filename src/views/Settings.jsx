@@ -25,54 +25,91 @@ export default function Settings() {
   const addBanned = () => { if (!newWord.trim()) return; save({ bannedWords: [...(settings.bannedWords || []), newWord.trim().toLowerCase()] }); setNewWord(''); };
   const removeBanned = (w) => save({ bannedWords: (settings.bannedWords || []).filter(x => x !== w) });
 
-  if (loading) return <div style={{ padding: '24px', fontSize: '13px', color: t.textSecondary, fontFamily: t.font, textAlign: 'center' }}>loading...</div>;
+  if (loading) return <div style={{ padding: 24, fontSize: 13, color: t.textSecondary, fontFamily: t.font, textAlign: 'center' }}>loading...</div>;
+
+  const sectionStyle = { padding: '20px 16px', borderBottom: `1px solid ${t.border}` };
+  const titleStyle = { fontSize: 16, fontWeight: 700, color: t.text, fontFamily: t.font, marginBottom: 4 };
+  const descStyle = { fontSize: 13, color: t.textSecondary, fontFamily: t.font, marginBottom: 16 };
 
   return (
     <div>
-      <div style={{ border: `1px solid ${t.border}`, borderRadius: t.radiusSm, padding: '16px', marginBottom: '16px' }}>
-        <div style={{ fontSize: '14px', fontWeight: 600, color: t.text, fontFamily: t.font, marginBottom: '4px' }}>posting phase</div>
-        <div style={{ fontSize: '12px', color: t.textSecondary, fontFamily: t.font, marginBottom: '14px' }}>controls how tweets get posted</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {[
-            { key: 'manual', label: 'manual', desc: 'copy-paste to X yourself, mark as posted' },
-            { key: 'approved', label: 'approved', desc: 'review drafts, click post — bot posts via X API' },
-            { key: 'auto', label: 'full auto', desc: 'bot generates and posts automatically' },
-          ].map(p => (
-            <div key={p.key} onClick={() => save({ phase: p.key })} style={{
-              padding: '10px 14px', border: `1px solid ${settings.phase === p.key ? t.green : t.border}`, borderRadius: t.radiusXs, cursor: 'pointer',
-              background: settings.phase === p.key ? (t.name === 'light' ? '#f0fdf4' : '#041a0e') : 'transparent',
+      {/* Posting mode */}
+      <div style={sectionStyle}>
+        <div style={titleStyle}>Posting mode</div>
+        <div style={descStyle}>Controls how tweets get posted.</div>
+        {[
+          { key: 'manual', label: 'manual', desc: 'Copy-paste to X yourself, mark as posted.' },
+          { key: 'approved', label: 'approved', desc: 'Review drafts, click post — bot posts via X API.' },
+          { key: 'auto', label: 'full auto', desc: 'Bot generates and posts automatically.' },
+        ].map(p => (
+          <div key={p.key} onClick={() => save({ phase: p.key })} style={{
+            display: 'flex', alignItems: 'center', gap: 12,
+            padding: '12px 0', borderBottom: `1px solid ${t.border}`,
+            cursor: 'pointer', transition: 'background 0.1s',
+          }}>
+            <div style={{
+              width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
+              border: `2px solid ${settings.phase === p.key ? '#00ba7c' : t.borderHover}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-                <div style={{ width: 10, height: 10, borderRadius: '50%', background: settings.phase === p.key ? t.green : 'transparent', border: `2px solid ${settings.phase === p.key ? t.green : t.textMuted}` }}></div>
-                <span style={{ fontSize: '13px', fontWeight: 500, color: settings.phase === p.key ? t.green : t.text, fontFamily: t.font }}>{p.label}</span>
-              </div>
-              <div style={{ fontSize: '12px', color: t.textSecondary, fontFamily: t.font, marginLeft: '18px' }}>{p.desc}</div>
+              {settings.phase === p.key && <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#00ba7c' }} />}
             </div>
-          ))}
-        </div>
+            <div>
+              <div style={{ fontSize: 15, fontWeight: settings.phase === p.key ? 700 : 600, color: settings.phase === p.key ? '#07694a' : t.text, fontFamily: t.font }}>{p.label}</div>
+              <div style={{ fontSize: 13, color: t.textSecondary, fontFamily: t.font }}>{p.desc}</div>
+            </div>
+          </div>
+        ))}
       </div>
 
-      <div style={{ border: `1px solid ${t.border}`, borderRadius: t.radiusSm, padding: '16px', marginBottom: '16px' }}>
-        <div style={{ fontSize: '14px', fontWeight: 600, color: t.text, fontFamily: t.font, marginBottom: '4px' }}>banned words / phrases</div>
-        <div style={{ fontSize: '12px', color: t.textSecondary, fontFamily: t.font, marginBottom: '12px' }}>the bot will never use these in auto-drafts</div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
+      {/* Banned words */}
+      <div style={sectionStyle}>
+        <div style={titleStyle}>Banned words / phrases</div>
+        <div style={descStyle}>The bot will never use these in auto-drafts.</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
           {(settings.bannedWords || []).map(w => (
-            <span key={w} style={{ background: t.pillBg, color: t.pillText, fontSize: '12px', padding: '3px 10px', borderRadius: t.radius, fontFamily: t.font, display: 'flex', alignItems: 'center', gap: '6px' }}>
-              {w} <span onClick={() => removeBanned(w)} style={{ cursor: 'pointer', color: t.textMuted, fontSize: '14px' }}>×</span>
+            <span key={w} style={{
+              fontSize: 13, padding: '4px 12px', borderRadius: 9999,
+              background: t.surface, border: `1px solid ${t.border}`,
+              fontFamily: t.font, display: 'flex', alignItems: 'center', gap: 6,
+            }}>
+              {w} <span onClick={() => removeBanned(w)} style={{ cursor: 'pointer', color: t.textMuted, fontSize: 14 }}>×</span>
             </span>
           ))}
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: 8 }}>
           <input value={newWord} onChange={e => setNewWord(e.target.value)} onKeyDown={e => e.key === 'Enter' && addBanned()} placeholder="add word or phrase..."
-            style={{ flex: 1, background: t.surface, border: `1px solid ${t.border}`, borderRadius: t.radiusXs, color: t.text, fontSize: '13px', fontFamily: t.font, padding: '6px 10px', outline: 'none' }} />
-          <button onClick={addBanned} style={{ background: t.btnPrimary, color: t.btnPrimaryText, border: 'none', padding: '6px 14px', borderRadius: t.radius, fontSize: '12px', fontWeight: 600, cursor: 'pointer', fontFamily: t.font }}>add</button>
+            style={{ flex: 1, padding: '10px 14px', borderRadius: 9999, border: `1px solid ${t.borderHover}`, fontSize: 14, background: t.bg, outline: 'none', color: t.text, fontFamily: t.font }} />
+          <button onClick={addBanned} style={{ padding: '10px 20px', borderRadius: 9999, background: t.btnPrimary, color: t.btnPrimaryText, fontWeight: 700, border: 'none', cursor: 'pointer', fontSize: 14, fontFamily: t.font }}>Add</button>
         </div>
       </div>
 
-      <div style={{ border: `1px solid ${t.border}`, borderRadius: t.radiusSm, padding: '16px' }}>
-        <div style={{ fontSize: '14px', fontWeight: 600, color: t.text, fontFamily: t.font, marginBottom: '4px' }}>x api</div>
-        <div style={{ fontSize: '12px', color: t.textSecondary, fontFamily: t.font }}>
-          {settings.xApiConfigured ? 'x api is configured. bot can post directly.' : 'not configured yet. set up in phase 2 (part 3). for now, copy-paste tweets manually.'}
+      {/* X API */}
+      <div style={sectionStyle}>
+        <div style={titleStyle}>X API</div>
+        <div style={descStyle}>Connection status for automated posting.</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 0', fontSize: 14, fontFamily: t.font }}>
+          <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#00ba7c' }} />
+          <strong>Connected</strong>
+          <span style={{ color: t.textSecondary, marginLeft: 4 }}>@Artlu157291 · Read and write</span>
+        </div>
+      </div>
+
+      {/* Schedule */}
+      <div style={sectionStyle}>
+        <div style={titleStyle}>Schedule</div>
+        <div style={descStyle}>When the bot posts approved tweets.</div>
+        <div style={{ display: 'flex', gap: 0, border: `1px solid ${t.border}`, overflow: 'hidden', borderRadius: 0 }}>
+          <div style={{ flex: 1, padding: 14, borderRight: `1px solid ${t.border}` }}>
+            <div style={{ fontWeight: 600, fontSize: 15, fontFamily: t.font }}>Morning slot</div>
+            <div style={{ fontSize: 13, color: t.textSecondary, marginTop: 2, fontFamily: t.font }}>9:00 AM (+ random 0-90min)</div>
+            <div style={{ fontSize: 13, color: '#00ba7c', marginTop: 4, fontFamily: t.font }}>Archive backlog</div>
+          </div>
+          <div style={{ flex: 1, padding: 14 }}>
+            <div style={{ fontWeight: 600, fontSize: 15, fontFamily: t.font }}>Evening slot</div>
+            <div style={{ fontSize: 13, color: t.textSecondary, marginTop: 2, fontFamily: t.font }}>9:00 PM (+ random 0-90min)</div>
+            <div style={{ fontSize: 13, color: '#1d9bf0', marginTop: 4, fontFamily: t.font }}>Current builds</div>
+          </div>
         </div>
       </div>
     </div>
