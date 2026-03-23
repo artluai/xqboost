@@ -1,0 +1,84 @@
+name: xqboost auto-post
+on:
+  # Morning slot: 2am UTC = 9am Bangkok (archive posts)
+  # Evening slot: 2pm UTC = 9pm Bangkok (current posts)
+  schedule:
+    - cron: '0 2 * * *'
+    - cron: '0 14 * * *'
+  
+  # Manual trigger
+  workflow_dispatch:
+    inputs:
+      slot:
+        description: 'Which slot to run'
+        required: true
+        default: 'evening'
+        type: choice
+        options:
+          - morning    # archive posts
+          - evening    # current/recent posts
+      skip_delay:
+        description: 'Skip random delay (for testing)'
+        required: false
+        default: 'true'
+        type: boolean
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v4
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: install dependencies
+        working-directory: scripts
+        run: npm install
+
+      # Random delay 0-90 minutes on scheduled runs
+      - name: random delay
+        if: ${{ github.event_name == 'schedule' }}
+        run: |
+          DELAY=$((RANDOM % 5400))
+          echo "Sleeping for $DELAY seconds ($((DELAY / 60)) minutes)"
+          sleep $DELAY
+
+      # Determine which slot based on cron or manual input
+      - name: set slot
+        id: slot
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "slot=${{ github.event.inputs.slot }}" >> $GITHUB_OUTPUT
+          else
+            HOUR=$(date -u +%H)
+            if [ "$HOUR" -lt 8 ]; then
+              echo "slot=morning" >> $GITHUB_OUTPUT
+            else
+              echo "slot=evening" >> $GITHUB_OUTPUT
+            fi
+          fi
+          echo "Slot: $(cat $GITHUB_OUTPUT)"
+
+      - name: post next approved tweet
+        working-directory: scripts
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+          POST_SLOT: ${{ steps.slot.outputs.slot }}
+        run: node post-tweet.js
+
+      - name: summary
+        if: always()
+        run: |
+          echo "## xqboost auto-post" >> $GITHUB_STEP_SUMMARY
+          echo "- **slot:** ${{ steps.slot.outputs.slot }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **time:** $(date -u)" >> $GITHUB_STEP_SUMMARY
