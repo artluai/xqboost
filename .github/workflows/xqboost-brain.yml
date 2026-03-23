@@ -18,6 +18,7 @@ on:
           - sync-only     # just check for new projects
           - drafts-only   # just generate drafts for projects needing tweets
           - media-only    # just generate media for drafts without it
+          - seed-notes    # seed session notes into Firestore (run once)
 
 jobs:
   brain:
@@ -36,6 +37,14 @@ jobs:
       - name: install script dependencies
         working-directory: scripts
         run: npm install
+
+      # ── Step 0: Seed Notes (run once) ──
+      - name: seed session notes
+        if: ${{ github.event.inputs.mode == 'seed-notes' }}
+        working-directory: scripts
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node seed-notes.js
 
       # ── Step 1: Sync ──
       - name: sync — scrape for new projects

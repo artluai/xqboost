@@ -62,6 +62,35 @@ async function getBannedWords() {
   return [];
 }
 
+async function getUnusedNotes(projectName) {
+  const notes = [];
+  try {
+    // Get notes related to this project that haven't been used in a tweet
+    const snap = await db.collection('notes')
+      .where('usedInTweet', '==', null)
+      .get();
+    
+    snap.forEach(doc => {
+      const data = doc.data();
+      // Include notes that match this project or have no project ref (general notes)
+      if (!data.projectRef?.name || data.projectRef.name.toLowerCase() === projectName?.toLowerCase()) {
+        notes.push({ id: doc.id, ...data });
+      }
+    });
+  } catch (e) {
+    console.log('[draft] no notes found or notes collection does not exist');
+  }
+  return notes;
+}
+
+async function markNoteUsed(noteId, tweetId) {
+  try {
+    await db.collection('notes').doc(noteId).update({
+      usedInTweet: tweetId,
+    });
+  } catch (e) {}
+}
+
 async function getSourcesNeedingTweets() {
   const sourcesSnap = await db.collection('sources')
     .where('status', 'in', ['active', 'priority'])
@@ -87,8 +116,10 @@ async function getSourcesNeedingTweets() {
   return needsTweets;
 }
 
-async function generateDraft(source, voiceGuide, recentTweets, bannedWords) {
+async function generateDraft(source, voiceGuide, recentTweets, bannedWords, notes) {
   const systemPrompt = `you are the AI voice of xqboost. you write tweets as the AI, about what you built with the human. follow the voice guide exactly. output ONLY the tweet text, nothing else. no quotes, no explanation.
+
+CRITICAL RULE: never fabricate dialogue, events, or interactions that didn't happen. only reference things from the project data and session notes provided below. if no notes are available, stick to factual project details only. do not invent quotes from the human. do not make up scenarios.
 
 ${voiceGuide}`;
 
@@ -100,6 +131,10 @@ ${voiceGuide}`;
     ? `\nrecent tweets (don't repeat these, vary the tone):\n${recentTweets.slice(0, 10).join('\n')}`
     : '';
 
+  const notesSection = notes.length > 0
+    ? `\nreal session notes (these actually happened — you can reference these):\n${notes.map(n => `- ${n.content}`).join('\n')}`
+    : '\nno session notes available. stick to factual project details only. do not invent dialogue or events.';
+
   const userPrompt = `write a single tweet about this project:
 
 project name: ${source.name}
@@ -110,11 +145,12 @@ project status: ${source.status}
 angles to cover: ${(source.angles || []).join(', ') || 'none specified'}
 ${bannedSection}
 ${historySection}
+${notesSection}
 
-write one tweet. follow the format in the voice guide (start with $ experiment_log). keep it under 280 characters if possible. include the project url or artlu.ai at the end.`;
+write one tweet. follow the format in the voice guide (start with $ experiment_log). MUST be under 280 characters. include the project url or artlu.ai at the end. only reference real events from the session notes above — never fabricate.`;
 
   const content = await callClaude(systemPrompt, userPrompt);
-  return content.trim();
+  return { content: content.trim(), usedNotes: notes.map(n => n.id) };
 }
 
 async function generateDrafts() {
@@ -151,15 +187,20 @@ async function generateDrafts() {
   for (const source of sources) {
     try {
       console.log(`[draft] generating for "${source.name}"...`);
-      const content = await generateDraft(source, voiceGuide, recentTweets, bannedWords);
       
-      if (!content || content.length < 10) {
+      // Fetch unused notes related to this project
+      const notes = await getUnusedNotes(source.name);
+      console.log(`[draft] found ${notes.length} unused note(s) for "${source.name}"`);
+      
+      const result = await generateDraft(source, voiceGuide, recentTweets, bannedWords, notes);
+      
+      if (!result.content || result.content.length < 10) {
         console.log(`[draft] skipping "${source.name}" — empty response`);
         continue;
       }
 
       const tweetDoc = {
-        content,
+        content: result.content,
         threadParts: [],
         type: 'announcement',
         status: 'draft',
@@ -176,7 +217,13 @@ async function generateDrafts() {
 
       const ref = await db.collection('tweets').add(tweetDoc);
       console.log(`[draft] created: "${source.name}" -> ${ref.id}`);
-      console.log(`[draft] content: ${content}`);
+      console.log(`[draft] content: ${result.content}`);
+      
+      // Mark notes as used
+      for (const noteId of result.usedNotes) {
+        await markNoteUsed(noteId, ref.id);
+      }
+      
       generated++;
 
       await new Promise(r => setTimeout(r, 1000));
