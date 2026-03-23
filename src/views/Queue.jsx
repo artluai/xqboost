@@ -1,95 +1,43 @@
 import { useState } from 'react';
-import { T } from '../tokens';
+import { useTheme } from '../theme';
 import { useTweets } from '../hooks/useTweets';
 import TweetCard from '../components/TweetCard';
 import ComposeBox from '../components/ComposeBox';
 
 export default function Queue() {
+  const { t } = useTheme();
   const [filter, setFilter] = useState(null);
   const { tweets, loading } = useTweets();
+  const filtered = filter ? tweets.filter(tw => tw.status === filter) : tweets;
 
-  const filtered = filter ? tweets.filter(t => t.status === filter) : tweets;
   const filters = [
-    { key: null, label: 'all' },
-    { key: 'draft', label: 'drafts' },
-    { key: 'approved', label: 'approved' },
-    { key: 'posted', label: 'posted' },
+    { key: null, label: 'all' }, { key: 'draft', label: 'drafts' },
+    { key: 'approved', label: 'approved' }, { key: 'posted', label: 'posted' },
   ];
 
   return (
     <div>
-      {/* Filter tabs */}
-      <div style={S.filters}>
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
         {filters.map(f => (
-          <span
-            key={f.label}
-            style={filter === f.key ? S.filterActive : S.filter}
-            onClick={() => setFilter(f.key)}
-          >
-            {f.label}
-          </span>
+          <span key={f.label} onClick={() => setFilter(f.key)} style={{
+            padding: '4px 12px', fontSize: '12px', borderRadius: t.radius, cursor: 'pointer', fontFamily: t.font, fontWeight: filter === f.key ? 500 : 400,
+            background: filter === f.key ? t.pillActiveBg : 'transparent',
+            color: filter === f.key ? t.pillActiveText : t.pillText,
+          }}>{f.label}</span>
         ))}
       </div>
-
-      {/* Tweet list */}
-      <div style={S.list}>
+      <div>
         {loading ? (
-          <div style={S.empty}>loading...</div>
+          <div style={{ padding: '24px', fontSize: '13px', color: t.textSecondary, fontFamily: t.font, textAlign: 'center' }}>loading...</div>
         ) : filtered.length === 0 ? (
-          <div style={S.empty}>
+          <div style={{ padding: '24px', fontSize: '13px', color: t.textSecondary, fontFamily: t.font, textAlign: 'center' }}>
             {filter ? `no ${filter} tweets` : 'no tweets yet. compose one below or generate drafts.'}
           </div>
         ) : (
-          filtered.map(tweet => (
-            <TweetCard key={tweet.id} tweet={tweet} />
-          ))
+          filtered.map(tw => <TweetCard key={tw.id} tweet={tw} />)
         )}
       </div>
-
-      {/* Compose box */}
-      <div style={S.compose}>
-        <ComposeBox />
-      </div>
+      <div style={{ marginTop: '16px' }}><ComposeBox /></div>
     </div>
   );
 }
-
-const S = {
-  filters: {
-    display: 'flex',
-    gap: '8px',
-    marginBottom: '16px',
-  },
-  filter: {
-    fontSize: T.smallSize,
-    color: T.dim,
-    padding: '2px 8px',
-    cursor: 'pointer',
-    fontFamily: T.font,
-    borderRadius: '2px',
-  },
-  filterActive: {
-    fontSize: T.smallSize,
-    color: T.green,
-    padding: '2px 8px',
-    cursor: 'pointer',
-    fontFamily: T.font,
-    border: `1px solid ${T.greenBorder}`,
-    borderRadius: '2px',
-  },
-  list: {
-    border: `1px solid ${T.border}`,
-    borderRadius: '2px',
-    marginBottom: '12px',
-  },
-  empty: {
-    padding: '24px',
-    fontSize: T.bodySize,
-    color: T.dim,
-    fontFamily: T.font,
-    textAlign: 'center',
-  },
-  compose: {
-    marginTop: '16px',
-  },
-};

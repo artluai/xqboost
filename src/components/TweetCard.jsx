@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { T, statusColors, formatTimeAgo } from '../tokens';
+import { useTheme, formatTimeAgo } from '../theme';
 import { updateTweet, deleteTweet, approveTweet, markAsPosted } from '../hooks/useTweets';
 
 export default function TweetCard({ tweet }) {
+  const { t } = useTheme();
   const [editing, setEditing] = useState(false);
   const [editContent, setEditContent] = useState(tweet.content);
   const [showPostUrl, setShowPostUrl] = useState(false);
@@ -10,325 +11,112 @@ export default function TweetCard({ tweet }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const isPosted = tweet.status === 'posted';
+  const isApproved = tweet.status === 'approved';
   const isThread = tweet.type === 'thread' && tweet.threadParts?.length > 0;
   const [threadExpanded, setThreadExpanded] = useState(false);
-  const sc = statusColors[tweet.status] || statusColors.draft;
   const charCount = (tweet.content || '').length;
 
-  const handleSave = async () => {
-    await updateTweet(tweet.id, { content: editContent });
-    setEditing(false);
-  };
+  const badge = {
+    draft: { bg: t.greenBg, color: t.greenText },
+    approved: { bg: t.orangeBg, color: t.orangeText },
+    posted: { bg: t.blueBg, color: t.blueText },
+    failed: { bg: t.redBg, color: t.redText },
+  }[tweet.status] || { bg: t.greenBg, color: t.greenText };
 
-  const handleApprove = async () => {
-    await approveTweet(tweet.id);
-  };
-
+  const handleSave = async () => { await updateTweet(tweet.id, { content: editContent }); setEditing(false); };
+  const handleApprove = () => approveTweet(tweet.id);
   const handleMarkPosted = async () => {
-    if (!showPostUrl) {
-      setShowPostUrl(true);
-      return;
-    }
-    await markAsPosted(tweet.id, postUrl);
-    setShowPostUrl(false);
-    setPostUrl('');
+    if (!showPostUrl) { setShowPostUrl(true); return; }
+    await markAsPosted(tweet.id, postUrl); setShowPostUrl(false); setPostUrl('');
   };
-
   const handleDelete = async () => {
-    if (!confirmDelete) {
-      setConfirmDelete(true);
-      return;
-    }
+    if (!confirmDelete) { setConfirmDelete(true); return; }
     await deleteTweet(tweet.id);
   };
 
+  const btnStyle = { background: t.btnBg, border: `1px solid ${t.btnBorder}`, color: t.btnText, fontSize: '12px', padding: '4px 14px', borderRadius: t.radius, cursor: 'pointer', fontFamily: t.font, fontWeight: 500 };
+  const btnPrimary = { ...btnStyle, background: t.btnPrimary, border: 'none', color: t.btnPrimaryText, fontWeight: 600 };
+  const btnDanger = { ...btnStyle, border: `1px solid ${t.redBorder}`, color: t.redText };
+
   return (
-    <div style={{ ...S.card, opacity: isPosted ? 0.6 : 1 }}>
-      {/* Top row: status, type, source, time */}
-      <div style={S.topRow}>
-        <div style={S.badges}>
-          <span style={{ ...S.badge, background: sc.bg, color: sc.text, border: `1px solid ${sc.border || 'transparent'}` }}>
-            {tweet.status}
-          </span>
-          <span style={S.typeBadge}>{tweet.type}</span>
-          <span style={S.sourceBadge}>{tweet.source || 'manual'}</span>
+    <div style={{ padding: '14px 0', borderBottom: `1px solid ${t.border}`, opacity: isPosted ? 0.55 : 1 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '11px', padding: '2px 10px', borderRadius: t.radius, fontWeight: 600, fontFamily: t.font, background: badge.bg, color: badge.color }}>{tweet.status}</span>
+          <span style={{ fontSize: '12px', color: t.textMuted, fontFamily: t.font }}>{tweet.type}</span>
+          <span style={{ fontSize: '12px', color: t.textSecondary, fontFamily: t.font }}>via {tweet.source || 'manual'}</span>
         </div>
-        <span style={S.time}>{formatTimeAgo(tweet.createdAt)}</span>
+        <span style={{ fontSize: '12px', color: t.textSecondary, fontFamily: t.font }}>{formatTimeAgo(tweet.createdAt)}</span>
       </div>
 
-      {/* Content */}
       {editing ? (
-        <div style={S.editWrap}>
-          <textarea
-            style={S.editArea}
-            value={editContent}
-            onChange={e => setEditContent(e.target.value)}
-            rows={4}
-          />
-          <div style={S.editActions}>
-            <span style={S.charCount}>{editContent.length} chars</span>
-            <button style={S.btnGreen} onClick={handleSave}>save</button>
-            <button style={S.btn} onClick={() => { setEditing(false); setEditContent(tweet.content); }}>cancel</button>
+        <div style={{ margin: '8px 0' }}>
+          <textarea value={editContent} onChange={e => setEditContent(e.target.value)} rows={4}
+            style={{ width: '100%', background: t.surface, border: `1px solid ${t.border}`, borderRadius: t.radiusXs, color: t.text, fontSize: '14px', fontFamily: t.font, padding: '10px', resize: 'vertical', lineHeight: '1.5', boxSizing: 'border-box', outline: 'none' }} />
+          <div style={{ display: 'flex', gap: '8px', marginTop: '6px', alignItems: 'center' }}>
+            <span style={{ fontSize: '12px', color: t.textMuted, fontFamily: t.font, marginRight: 'auto' }}>{editContent.length} chars</span>
+            <button style={btnPrimary} onClick={handleSave}>save</button>
+            <button style={btnStyle} onClick={() => { setEditing(false); setEditContent(tweet.content); }}>cancel</button>
           </div>
         </div>
       ) : (
-        <p style={S.content}>{tweet.content}</p>
+        <p style={{ fontSize: '14px', color: t.text, lineHeight: '1.55', margin: '0 0 8px', fontFamily: t.font, whiteSpace: 'pre-wrap' }}>{tweet.content}</p>
       )}
 
-      {/* Thread indicator */}
       {isThread && !threadExpanded && (
-        <p style={S.threadHint}>+ {tweet.threadParts.length} more parts in thread</p>
+        <p style={{ fontSize: '13px', color: t.textMuted, fontStyle: 'italic', margin: '4px 0', fontFamily: t.font }}>+ {tweet.threadParts.length} more parts in thread</p>
       )}
-
-      {/* Expanded thread */}
       {isThread && threadExpanded && (
-        <div style={S.threadParts}>
+        <div style={{ borderLeft: `2px solid ${t.border}`, paddingLeft: '12px', margin: '8px 0' }}>
           {tweet.threadParts.map((part, i) => (
-            <p key={i} style={S.threadPart}>{i + 2}/ {part}</p>
+            <p key={i} style={{ fontSize: '14px', color: t.text, margin: '6px 0', lineHeight: '1.5', fontFamily: t.font }}>{i + 2}/ {part}</p>
           ))}
         </div>
       )}
 
-      {/* Meta row: source ref, char count */}
-      <div style={S.metaRow}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+        <span style={{ fontSize: '12px', color: t.textSecondary, fontFamily: t.font }}>{charCount} chars</span>
         {tweet.sourceRef && (
           <>
-            <span style={S.meta}>↳ {tweet.sourceRef.name}</span>
-            <span style={S.meta}>·</span>
+            <span style={{ fontSize: '12px', color: t.textSecondary, fontFamily: t.font }}>·</span>
+            <span style={{ fontSize: '12px', color: t.blueLink, fontFamily: t.font }}>↳ {tweet.sourceRef.name}</span>
           </>
-        )}
-        {isThread ? (
-          <span style={S.meta}>{(tweet.threadParts?.length || 0) + 1} parts</span>
-        ) : (
-          <span style={S.meta}>{charCount} chars</span>
         )}
         {tweet.media?.length > 0 && (
           <>
-            <span style={S.meta}>·</span>
-            <span style={S.meta}>{tweet.media.length} media</span>
+            <span style={{ fontSize: '12px', color: t.textSecondary }}>·</span>
+            <span style={{ fontSize: '12px', color: t.textSecondary, fontFamily: t.font }}>{tweet.media.length} media</span>
           </>
         )}
       </div>
 
-      {/* Actions */}
       {isPosted ? (
-        <div style={S.actions}>
-          {tweet.xPostUrl ? (
-            <a href={tweet.xPostUrl} target="_blank" rel="noopener noreferrer" style={S.xLink}>↗ view on x</a>
-          ) : (
-            <span style={S.meta}>posted</span>
-          )}
-        </div>
+        tweet.xPostUrl ? (
+          <a href={tweet.xPostUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: '12px', color: t.blueLink, fontFamily: t.font, textDecoration: 'none', fontWeight: 500 }}>view on x ↗</a>
+        ) : (
+          <span style={{ fontSize: '12px', color: t.textSecondary, fontFamily: t.font }}>posted</span>
+        )
       ) : (
-        <div style={S.actions}>
-          {!editing && (
-            <button style={S.btn} onClick={() => setEditing(true)}>edit</button>
-          )}
-          {isThread && (
-            <button style={S.btn} onClick={() => setThreadExpanded(!threadExpanded)}>
-              {threadExpanded ? 'collapse' : 'expand thread'}
-            </button>
-          )}
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+          {!editing && <button style={btnStyle} onClick={() => setEditing(true)}>edit</button>}
+          {isThread && <button style={btnStyle} onClick={() => setThreadExpanded(!threadExpanded)}>{threadExpanded ? 'collapse' : 'expand thread'}</button>}
+          {tweet.status === 'draft' && <button style={btnPrimary} onClick={handleApprove}>approve</button>}
+          {isApproved && <button style={btnPrimary} onClick={handleMarkPosted}>post now</button>}
           {tweet.status === 'draft' && (
-            <button style={S.btnGreen} onClick={handleApprove}>approve</button>
-          )}
-          {(tweet.status === 'draft' || tweet.status === 'approved') && (
             <>
-              <button style={S.btnGreen} onClick={handleMarkPosted}>
-                {showPostUrl ? 'confirm posted' : 'mark posted'}
-              </button>
+              <button style={btnStyle} onClick={handleMarkPosted}>{showPostUrl ? 'confirm' : 'mark posted'}</button>
               {showPostUrl && (
-                <input
-                  style={S.urlInput}
-                  placeholder="paste x post url (optional)"
-                  value={postUrl}
-                  onChange={e => setPostUrl(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleMarkPosted()}
-                />
+                <input placeholder="paste x url (optional)" value={postUrl} onChange={e => setPostUrl(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleMarkPosted()}
+                  style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: t.radiusXs, color: t.text, fontSize: '12px', fontFamily: t.font, padding: '4px 8px', flex: 1, minWidth: '140px', outline: 'none' }} />
               )}
             </>
           )}
-          <button
-            style={confirmDelete ? S.btnRed : S.btnDim}
-            onClick={handleDelete}
-          >
+          <button style={confirmDelete ? btnDanger : { ...btnStyle, color: t.textMuted, borderColor: t.border }} onClick={handleDelete}>
             {confirmDelete ? 'confirm delete' : 'delete'}
           </button>
-          {confirmDelete && (
-            <button style={S.btnDim} onClick={() => setConfirmDelete(false)}>cancel</button>
-          )}
+          {confirmDelete && <button style={btnStyle} onClick={() => setConfirmDelete(false)}>cancel</button>}
         </div>
       )}
     </div>
   );
 }
-
-const S = {
-  card: {
-    padding: '12px',
-    borderBottom: `1px solid ${T.border}`,
-  },
-  topRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: '6px',
-  },
-  badges: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-  },
-  badge: {
-    fontSize: T.smallSize,
-    padding: '1px 6px',
-    borderRadius: '2px',
-    fontFamily: T.font,
-  },
-  typeBadge: {
-    fontSize: T.smallSize,
-    color: T.dim,
-    fontFamily: T.font,
-  },
-  sourceBadge: {
-    fontSize: T.smallSize,
-    color: T.stack,
-    fontFamily: T.font,
-  },
-  time: {
-    fontSize: T.smallSize,
-    color: T.stack,
-    fontFamily: T.font,
-  },
-  content: {
-    fontSize: T.bodySize,
-    color: T.desc,
-    margin: '8px 0',
-    lineHeight: '1.5',
-    fontFamily: T.font,
-    whiteSpace: 'pre-wrap',
-  },
-  threadHint: {
-    fontSize: T.bodySize,
-    color: T.dim,
-    margin: '4px 0',
-    lineHeight: '1.5',
-    fontFamily: T.font,
-    fontStyle: 'italic',
-  },
-  threadParts: {
-    borderLeft: `2px solid ${T.border}`,
-    paddingLeft: '10px',
-    margin: '8px 0',
-  },
-  threadPart: {
-    fontSize: T.bodySize,
-    color: T.desc,
-    margin: '6px 0',
-    lineHeight: '1.5',
-    fontFamily: T.font,
-  },
-  metaRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    marginTop: '8px',
-  },
-  meta: {
-    fontSize: T.smallSize,
-    color: T.stack,
-    fontFamily: T.font,
-  },
-  actions: {
-    display: 'flex',
-    gap: '8px',
-    marginTop: '10px',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-  },
-  btn: {
-    background: 'none',
-    border: `1px solid ${T.border}`,
-    color: T.desc,
-    fontSize: T.smallSize,
-    fontFamily: T.font,
-    padding: '2px 8px',
-    cursor: 'pointer',
-    borderRadius: '2px',
-  },
-  btnGreen: {
-    background: 'none',
-    border: `1px solid ${T.greenBorder}`,
-    color: T.green,
-    fontSize: T.smallSize,
-    fontFamily: T.font,
-    padding: '2px 8px',
-    cursor: 'pointer',
-    borderRadius: '2px',
-  },
-  btnDim: {
-    background: 'none',
-    border: `1px solid ${T.border}`,
-    color: T.dim,
-    fontSize: T.smallSize,
-    fontFamily: T.font,
-    padding: '2px 8px',
-    cursor: 'pointer',
-    borderRadius: '2px',
-  },
-  btnRed: {
-    background: T.redBg,
-    border: `1px solid ${T.redBorder}`,
-    color: T.red,
-    fontSize: T.smallSize,
-    fontFamily: T.font,
-    padding: '2px 8px',
-    cursor: 'pointer',
-    borderRadius: '2px',
-  },
-  xLink: {
-    fontSize: T.smallSize,
-    color: T.green,
-    fontFamily: T.font,
-    textDecoration: 'none',
-  },
-  editWrap: {
-    margin: '8px 0',
-  },
-  editArea: {
-    width: '100%',
-    background: T.surface,
-    border: `1px solid ${T.border}`,
-    borderRadius: '2px',
-    color: T.desc,
-    fontSize: T.bodySize,
-    fontFamily: T.font,
-    padding: '8px',
-    resize: 'vertical',
-    lineHeight: '1.5',
-    boxSizing: 'border-box',
-  },
-  editActions: {
-    display: 'flex',
-    gap: '8px',
-    marginTop: '6px',
-    alignItems: 'center',
-  },
-  charCount: {
-    fontSize: T.smallSize,
-    color: T.stack,
-    fontFamily: T.font,
-    marginRight: 'auto',
-  },
-  urlInput: {
-    background: T.surface,
-    border: `1px solid ${T.border}`,
-    borderRadius: '2px',
-    color: T.desc,
-    fontSize: T.smallSize,
-    fontFamily: T.font,
-    padding: '2px 6px',
-    flex: 1,
-    minWidth: '150px',
-  },
-};

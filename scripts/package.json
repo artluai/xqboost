@@ -1,0 +1,11 @@
+{
+  "name": "xqboost-scripts",
+  "version": "1.0.0",
+  "private": true,
+  "description": "xqboost backend scripts — sync, draft generation, media pipeline",
+  "dependencies": {
+    "canvas": "^2.11.2",
+    "firebase-admin": "^12.0.0",
+    "puppeteer": "^22.0.0"
+  }
+}

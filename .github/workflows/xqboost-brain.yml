@@ -1,0 +1,77 @@
+name: xqboost brain
+
+on:
+  # Run every hour
+  schedule:
+    - cron: '0 * * * *'
+  
+  # Manual trigger from GitHub Actions UI
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'What to run'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+          - full          # sync + drafts + media
+          - sync-only     # just check for new projects
+          - drafts-only   # just generate drafts for projects needing tweets
+          - media-only    # just generate media for drafts without it
+
+jobs:
+  brain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v4
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: install script dependencies
+        working-directory: scripts
+        run: npm install
+
+      # ── Step 1: Sync ──
+      - name: sync — scrape for new projects
+        if: ${{ github.event.inputs.mode == 'full' || github.event.inputs.mode == 'sync-only' || github.event_name == 'schedule' }}
+        id: sync
+        working-directory: scripts
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          TARGET_URL: ${{ vars.TARGET_URL || 'https://artlu.ai' }}
+        run: node sync.js
+
+      # ── Step 2: Generate Drafts ──
+      - name: generate AI drafts
+        if: ${{ github.event.inputs.mode == 'full' || github.event.inputs.mode == 'drafts-only' || github.event_name == 'schedule' }}
+        id: drafts
+        working-directory: scripts
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          CLAUDE_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
+          NEW_SOURCES: ${{ steps.sync.outputs.new_sources || '' }}
+        run: node generate-drafts.js
+
+      # ── Step 3: Media Pipeline ──
+      - name: generate media (screenshots + branded cards)
+        if: ${{ github.event.inputs.mode == 'full' || github.event.inputs.mode == 'media-only' || github.event_name == 'schedule' }}
+        working-directory: scripts
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: node media-pipeline.js
+
+      # ── Summary ──
+      - name: summary
+        if: always()
+        run: |
+          echo "## xqboost brain run" >> $GITHUB_STEP_SUMMARY
+          echo "- **mode:** ${{ github.event.inputs.mode || 'scheduled' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **sync new:** ${{ steps.sync.outputs.new_count || 'skipped' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **drafts generated:** ${{ steps.drafts.outputs.drafts_generated || 'skipped' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **time:** $(date -u)" >> $GITHUB_STEP_SUMMARY

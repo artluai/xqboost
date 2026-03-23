@@ -9,10 +9,7 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => {
-      setUser(u);
-      setLoading(false);
-    });
+    const unsub = onAuthStateChanged(auth, (u) => { setUser(u); setLoading(false); });
     return unsub;
   }, []);
 
@@ -21,19 +18,13 @@ export function AuthProvider({ children }) {
 
   if (loading) {
     return (
-      <div style={{ background: '#08090a', color: '#555b66', fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', fontSize: '13px', color: '#536471', fontFamily: '-apple-system, sans-serif' }}>
         loading...
       </div>
     );
   }
 
-  return (
-    <AuthContext.Provider value={{ user, login, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={{ user, login, logout }}>{children}</AuthContext.Provider>;
 }
 
-export function useAuth() {
-  return useContext(AuthContext);
-}
+export function useAuth() { return useContext(AuthContext); }
