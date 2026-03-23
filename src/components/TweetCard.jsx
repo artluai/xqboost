@@ -12,6 +12,7 @@ export default function TweetCard({ tweet }) {
 
   const isPosted = tweet.status === 'posted';
   const isApproved = tweet.status === 'approved';
+  const isDismissed = tweet.status === 'dismissed';
   const isThread = tweet.type === 'thread' && tweet.threadParts?.length > 0;
   const [threadExpanded, setThreadExpanded] = useState(false);
   const charCount = (tweet.content || '').length;
@@ -21,10 +22,13 @@ export default function TweetCard({ tweet }) {
     approved: { bg: t.orangeBg, color: t.orangeText },
     posted: { bg: t.blueBg, color: t.blueText },
     failed: { bg: t.redBg, color: t.redText },
+    dismissed: { bg: t.pillBg, color: t.textMuted },
   }[tweet.status] || { bg: t.greenBg, color: t.greenText };
 
   const handleSave = async () => { await updateTweet(tweet.id, { content: editContent }); setEditing(false); };
   const handleApprove = () => approveTweet(tweet.id);
+  const handleDismiss = () => updateTweet(tweet.id, { status: 'dismissed' });
+  const handleUndismiss = () => updateTweet(tweet.id, { status: 'draft' });
   const handleMarkPosted = async () => {
     if (!showPostUrl) { setShowPostUrl(true); return; }
     await markAsPosted(tweet.id, postUrl); setShowPostUrl(false); setPostUrl('');
@@ -39,7 +43,7 @@ export default function TweetCard({ tweet }) {
   const btnDanger = { ...btnStyle, border: `1px solid ${t.redBorder}`, color: t.redText };
 
   return (
-    <div style={{ padding: '14px 0', borderBottom: `1px solid ${t.border}`, opacity: isPosted ? 0.55 : 1 }}>
+    <div style={{ padding: '14px 0', borderBottom: `1px solid ${t.border}`, opacity: isPosted || isDismissed ? 0.55 : 1 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ fontSize: '11px', padding: '2px 10px', borderRadius: t.radius, fontWeight: 600, fontFamily: t.font, background: badge.bg, color: badge.color }}>{tweet.status}</span>
@@ -96,6 +100,14 @@ export default function TweetCard({ tweet }) {
         ) : (
           <span style={{ fontSize: '12px', color: t.textSecondary, fontFamily: t.font }}>posted</span>
         )
+      ) : isDismissed ? (
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <button style={btnStyle} onClick={handleUndismiss}>restore to drafts</button>
+          <button style={confirmDelete ? btnDanger : { ...btnStyle, color: t.textMuted, borderColor: t.border }} onClick={handleDelete}>
+            {confirmDelete ? 'confirm delete' : 'delete forever'}
+          </button>
+          {confirmDelete && <button style={btnStyle} onClick={() => setConfirmDelete(false)}>cancel</button>}
+        </div>
       ) : (
         <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
           {!editing && <button style={btnStyle} onClick={() => setEditing(true)}>edit</button>}
@@ -111,6 +123,7 @@ export default function TweetCard({ tweet }) {
               )}
             </>
           )}
+          <button style={btnStyle} onClick={handleDismiss}>dismiss</button>
           <button style={confirmDelete ? btnDanger : { ...btnStyle, color: t.textMuted, borderColor: t.border }} onClick={handleDelete}>
             {confirmDelete ? 'confirm delete' : 'delete'}
           </button>

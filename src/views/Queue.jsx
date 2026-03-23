@@ -8,11 +8,28 @@ export default function Queue() {
   const { t } = useTheme();
   const [filter, setFilter] = useState(null);
   const { tweets, loading } = useTweets();
-  const filtered = filter ? tweets.filter(tw => tw.status === filter) : tweets;
+  
+  // Hide dismissed from default/filtered views unless explicitly filtering for them
+  const visible = filter === 'dismissed' 
+    ? tweets.filter(tw => tw.status === 'dismissed')
+    : filter 
+      ? tweets.filter(tw => tw.status === filter) 
+      : tweets.filter(tw => tw.status !== 'dismissed');
+  
+  // Sort by dayNumber ascending, then by createdAt descending
+  const sorted = [...visible].sort((a, b) => {
+    const dayA = a.dayNumber || 999;
+    const dayB = b.dayNumber || 999;
+    if (dayA !== dayB) return dayA - dayB;
+    const timeA = a.createdAt?.seconds || 0;
+    const timeB = b.createdAt?.seconds || 0;
+    return timeB - timeA;
+  });
 
   const filters = [
     { key: null, label: 'all' }, { key: 'draft', label: 'drafts' },
     { key: 'approved', label: 'approved' }, { key: 'posted', label: 'posted' },
+    { key: 'dismissed', label: 'dismissed' },
   ];
 
   return (
@@ -29,12 +46,12 @@ export default function Queue() {
       <div>
         {loading ? (
           <div style={{ padding: '24px', fontSize: '13px', color: t.textSecondary, fontFamily: t.font, textAlign: 'center' }}>loading...</div>
-        ) : filtered.length === 0 ? (
+        ) : sorted.length === 0 ? (
           <div style={{ padding: '24px', fontSize: '13px', color: t.textSecondary, fontFamily: t.font, textAlign: 'center' }}>
             {filter ? `no ${filter} tweets` : 'no tweets yet. compose one below or generate drafts.'}
           </div>
         ) : (
-          filtered.map(tw => <TweetCard key={tw.id} tweet={tw} />)
+          sorted.map(tw => <TweetCard key={tw.id} tweet={tw} />)
         )}
       </div>
       <div style={{ marginTop: '16px' }}><ComposeBox /></div>

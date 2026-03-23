@@ -135,6 +135,13 @@ ${voiceGuide}`;
     ? `\nreal session notes (these actually happened — you can reference these):\n${notes.map(n => `- ${n.content}`).join('\n')}`
     : '\nno session notes available. stick to factual project details only. do not invent dialogue or events.';
 
+  // Determine if this is an archive post (project date is before today)
+  const today = new Date().toISOString().split('T')[0];
+  const isArchive = source.date && source.date < today;
+  const archiveNote = isArchive
+    ? `\nIMPORTANT: this project was built in the past (${source.date}). use the archive format: "$ experiment_log [archive: day ${source.dayNumber || '?'}/100]..." or "$ experiment_log [from the archives] day ${source.dayNumber || '?'}/100..."`
+    : '';
+
   const userPrompt = `write a single tweet about this project:
 
 project name: ${source.name}
@@ -143,14 +150,32 @@ project url: ${source.url || 'none'}
 current tweet count for this project: ${source.tweetCount || 0}
 project status: ${source.status}
 angles to cover: ${(source.angles || []).join(', ') || 'none specified'}
+${archiveNote}
 ${bannedSection}
 ${historySection}
 ${notesSection}
 
-write one tweet. follow the format in the voice guide (start with $ experiment_log). MUST be under 280 characters. include the project url or artlu.ai at the end. only reference real events from the session notes above — never fabricate.`;
+rules:
+1. follow the format in the voice guide (start with $ experiment_log)
+2. HARD LIMIT: 280 characters maximum. count carefully. if over 280, shorten it. do not exceed 280 under any circumstances.
+3. if the project has interesting technical details (specific APIs, algorithms, browser features, security concepts), mention them briefly — it makes the tweet more credible
+4. only reference real events from the session notes above — never fabricate
+5. include the project url if available, otherwise artlu.ai at the end
+6. if this is an archive post, use the archive prefix format`;
 
   const content = await callClaude(systemPrompt, userPrompt);
-  return { content: content.trim(), usedNotes: notes.map(n => n.id) };
+  
+  // Hard enforce 280 chars — truncate if Claude still goes over
+  let finalContent = content.trim();
+  if (finalContent.length > 280) {
+    console.log(`[draft] warning: ${source.name} draft is ${finalContent.length} chars, truncating`);
+    // Try to cut at last sentence before 280
+    const cut = finalContent.substring(0, 277);
+    const lastPeriod = cut.lastIndexOf('.');
+    finalContent = lastPeriod > 200 ? cut.substring(0, lastPeriod + 1) : cut + '...';
+  }
+  
+  return { content: finalContent, usedNotes: notes.map(n => n.id) };
 }
 
 async function generateDrafts() {
@@ -180,6 +205,19 @@ async function generateDrafts() {
   if (sources.length === 0) {
     console.log('[draft] nothing to generate');
     return { generated: 0 };
+  }
+
+  // Apply max drafts limit
+  const maxDrafts = parseInt(process.env.MAX_DRAFTS) || 5;
+  if (sources.length > maxDrafts) {
+    console.log(`[draft] limiting to ${maxDrafts} drafts (${sources.length} sources need tweets)`);
+    // Priority sources first, then by day number
+    sources.sort((a, b) => {
+      if (a.status === 'priority' && b.status !== 'priority') return -1;
+      if (b.status === 'priority' && a.status !== 'priority') return 1;
+      return (a.dayNumber || 999) - (b.dayNumber || 999);
+    });
+    sources = sources.slice(0, maxDrafts);
   }
 
   let generated = 0;
