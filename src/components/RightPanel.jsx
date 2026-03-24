@@ -12,7 +12,10 @@ export default function RightPanel({ tweets, sources }) {
   const tweetCountBySource = {};
   tweets.forEach(tw => { if (tw.sourceRef?.id) tweetCountBySource[tw.sourceRef.id] = (tweetCountBySource[tw.sourceRef.id] || 0) + 1; });
 
-  const sortedSources = [...(sources || [])].sort((a, b) => {
+  // Filter out paused and duplicate sources
+  const activeSources = (sources || []).filter(s => s.status !== 'paused' && !s.duplicate);
+
+  const sortedSources = [...activeSources].sort((a, b) => {
     const ca = tweetCountBySource[a.id] || 0;
     const cb = tweetCountBySource[b.id] || 0;
     if (ca === 0 && cb > 0) return -1;
@@ -32,9 +35,6 @@ export default function RightPanel({ tweets, sources }) {
   const cleanName = (name) => {
     if (!name) return '';
     let n = name.replace(/^[►▶]/, '').trim();
-    // If name contains a description (lowercase text after the actual name), try to extract just the name
-    // Names are typically Title Case or contain dashes/special chars
-    // Descriptions start with lowercase after the name
     const match = n.match(/^([A-Z][^\n]*?)(?=[a-z]{2}[a-z\s,\-—]+(?:for|that|with|and|the|to|on|in|of|a)\s)/);
     if (match && match[1].length > 5) n = match[1].trim();
     return n.length > 35 ? n.slice(0, 32) + '…' : n;
@@ -84,7 +84,7 @@ export default function RightPanel({ tweets, sources }) {
           );
         })}
         <div style={{ paddingTop: 12 }}>
-          <span style={{ fontSize: 13, color: '#1d9bf0', cursor: 'pointer', fontFamily: t.font }}>See all {(sources || []).length} projects →</span>
+          <span style={{ fontSize: 13, color: '#1d9bf0', cursor: 'pointer', fontFamily: t.font }}>See all {activeSources.length} projects →</span>
         </div>
       </div>
     </div>

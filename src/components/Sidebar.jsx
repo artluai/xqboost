@@ -150,11 +150,29 @@ export default function Sidebar({ activeTab, onTabChange, stats, onCompose }) {
             <strong style={{ color: t.text, fontWeight: 600 }}>Autopost</strong> {autopostOn ? 'on' : 'off'}
           </span>
         </div>
-        <div style={{ padding: '4px 12px 12px', fontSize: 13, color: t.textMuted, lineHeight: 1.6, fontFamily: t.font }}>
+        <div style={{ padding: '4px 12px 8px', fontSize: 13, color: t.textMuted, lineHeight: 1.6, fontFamily: t.font }}>
           <span style={{ color: t.textSecondary, fontWeight: 600, fontFamily: 'ui-monospace, "SF Mono", monospace' }}>day {dayNum} / 100</span>
           <br />
           {autopostOn ? 'next: 9am tomorrow' : 'next post: manual'}
         </div>
+      </div>
+
+      {/* Sign out */}
+      <div style={{ padding: '0 12px 12px' }}>
+        <button
+          onClick={logout}
+          onMouseEnter={() => setHovered('logout')}
+          onMouseLeave={() => setHovered(null)}
+          style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            fontSize: 14, color: t.textSecondary, fontFamily: t.font,
+            padding: '8px 0',
+            opacity: hovered === 'logout' ? 1 : 0.7,
+            transition: 'opacity 0.15s',
+          }}
+        >
+          sign out
+        </button>
       </div>
     </div>
   );

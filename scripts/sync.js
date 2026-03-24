@@ -4,6 +4,8 @@
  * scrapes the target website with Puppeteer, extracts project data,
  * compares against existing sources in Firestore, creates new source
  * docs when new projects are detected.
+ * 
+ * v2: stricter name extraction to prevent garbled/concatenated names.
  */
 
 const puppeteer = require('puppeteer');
@@ -16,6 +18,19 @@ function getDayNumber(dateStr) {
   const d = new Date(dateStr + 'T00:00:00');
   const diff = Math.floor((d - CHALLENGE_START) / (1000 * 60 * 60 * 24));
   return diff + 1;
+}
+
+// Validate that a scraped name looks like a real project name
+function isValidProjectName(name) {
+  if (!name || name.length < 2) return false;
+  if (name.length > 80) return false;           // real names are short
+  if (name.includes('·')) return false;          // stack separator leaked in
+  if (name.includes('\t')) return false;         // tab character = cell bleed
+  if (/\d{4}-\d{2}-\d{2}/.test(name)) return false; // date leaked into name
+  if (/https?:\/\//.test(name)) return false;    // URL leaked into name
+  // Reject if it looks like concatenated text (lowercase run > 40 chars)
+  if (/[a-z]{40,}/.test(name.replace(/\s/g, ''))) return false;
+  return true;
 }
 
 async function scrapeProjects() {
@@ -45,8 +60,25 @@ async function scrapeProjects() {
         if (cells.length < 2) return;
         
         const nameEl = cells[0];
-        const name = nameEl?.textContent?.trim()?.split('\n')[0]?.trim();
-        
+
+        // Try to get name from the first child element (h3, a, span, strong)
+        // rather than the whole cell's textContent
+        let name = '';
+        const firstChild = nameEl.querySelector('h3, a, strong, span, b');
+        if (firstChild) {
+          name = firstChild.textContent?.trim();
+        }
+        // Fallback: first line of cell text, split on newline
+        if (!name) {
+          name = nameEl?.textContent?.trim()?.split('\n')[0]?.trim();
+        }
+        // Extra cleanup: cut at first lowercase-to-uppercase boundary
+        // that looks like a description starting (e.g. "Perp Calculatorrisk management" -> "Perp Calculator")
+        if (name && name.length > 60) {
+          const cutMatch = name.match(/^(.{10,}?)(?=[a-z][A-Z])/);
+          if (cutMatch) name = cutMatch[1];
+        }
+
         // Find date (YYYY-MM-DD pattern)
         const rowText = row.textContent;
         const dateMatch = rowText.match(/(\d{4}-\d{2}-\d{2})/);
@@ -56,16 +88,25 @@ async function scrapeProjects() {
         const links = row.querySelectorAll('a[href*="http"]');
         const url = links.length > 0 ? links[0].href : '';
         
-        if (name && name.length > 1 && name.length < 200) {
-          results.push({ name, date, url });
+        if (name) {
+          results.push({ name: name.trim(), date, url });
         }
       });
 
       return results;
     });
 
-    console.log(`[sync] scraped ${projects.length} projects from ${TARGET_URL}`);
-    return projects;
+    // Validate names server-side (page.evaluate can't call our functions)
+    const validated = projects.filter(p => {
+      if (!isValidProjectName(p.name)) {
+        console.log(`[sync] SKIPPED garbled name: "${p.name.slice(0, 60)}..."`);
+        return false;
+      }
+      return true;
+    });
+
+    console.log(`[sync] scraped ${projects.length} raw, ${validated.length} valid projects from ${TARGET_URL}`);
+    return validated;
 
   } finally {
     await browser.close();

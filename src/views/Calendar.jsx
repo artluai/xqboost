@@ -56,7 +56,7 @@ export default function Calendar({ sources }) {
 
   const px = 24;
 
-  // Mobile: date list view
+  // Mobile: date list view (newest first)
   if (isMobile) {
     const datesWithContent = calendarDays
       .filter(({ inMonth }) => inMonth)
@@ -67,7 +67,8 @@ export default function Calendar({ sources }) {
         const dayNum = isInChallenge(date) ? getDayNumber(date) : null;
         return { date, k, dp, dt, dayNum, isToday: isToday(date) };
       })
-      .filter(d => d.dp.length > 0 || d.dt.length > 0 || d.isToday);
+      .filter(d => d.dp.length > 0 || d.dt.length > 0 || d.isToday)
+      .reverse();
 
     return (
       <div style={{ padding: `0 ${px}px` }}>
@@ -88,7 +89,7 @@ export default function Calendar({ sources }) {
             <div key={d.k} style={{
               padding: 16, marginBottom: 12,
               border: `1px solid ${d.isToday ? '#22c55e' : t.border}`,
-              borderRadius: 8, background: d.isToday ? '#f0fdf4' : t.bg,
+              borderRadius: 8, background: d.isToday ? (t.name === 'light' ? '#f0fdf4' : '#041a0e') : t.bg,
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -99,9 +100,9 @@ export default function Calendar({ sources }) {
                   {d.dayNum && <span style={{ fontSize: 12, color: '#22c55e', fontWeight: 600, fontFamily: t.font }}>d{d.dayNum}</span>}
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  {d.dp.length > 0 && <span style={{ fontSize: 12, color: '#22c55e', background: '#e8f5e9', padding: '2px 8px', borderRadius: 4, fontFamily: t.font }}>{d.dp.length} project{d.dp.length !== 1 ? 's' : ''}</span>}
-                  {posted > 0 && <span style={{ fontSize: 12, color: '#1d9bf0', background: '#e3f2fd', padding: '2px 8px', borderRadius: 4, fontFamily: t.font }}>{posted} posted</span>}
-                  {draftCount > 0 && <span style={{ fontSize: 12, color: '#c2a300', background: '#fef9e7', padding: '2px 8px', borderRadius: 4, fontFamily: t.font }}>{draftCount} draft{draftCount !== 1 ? 's' : ''}</span>}
+                  {d.dp.length > 0 && <span style={{ fontSize: 12, color: '#22c55e', background: t.name === 'light' ? '#e8f5e9' : '#062b12', padding: '2px 8px', borderRadius: 4, fontFamily: t.font }}>{d.dp.length} project{d.dp.length !== 1 ? 's' : ''}</span>}
+                  {posted > 0 && <span style={{ fontSize: 12, color: '#1d9bf0', background: t.name === 'light' ? '#e3f2fd' : '#0c1929', padding: '2px 8px', borderRadius: 4, fontFamily: t.font }}>{posted} posted</span>}
+                  {draftCount > 0 && <span style={{ fontSize: 12, color: '#c2a300', background: t.name === 'light' ? '#fef9e7' : '#1a1400', padding: '2px 8px', borderRadius: 4, fontFamily: t.font }}>{draftCount} draft{draftCount !== 1 ? 's' : ''}</span>}
                 </div>
               </div>
               {d.dp.map((p, j) => (
@@ -148,7 +149,7 @@ export default function Calendar({ sources }) {
 
           return (
             <div key={i} style={{
-              background: todayCell ? '#f0fdf4' : t.bg,
+              background: todayCell ? (t.name === 'light' ? '#f0fdf4' : '#041a0e') : t.bg,
               padding: 6, minHeight: 80,
               fontFamily: t.font,
               opacity: !inMonth ? 0.2 : future ? 0.35 : 1,

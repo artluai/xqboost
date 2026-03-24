@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useTheme } from '../theme';
+import { useAuth } from '../auth';
 
 export default function Settings() {
   const { t } = useTheme();
+  const { logout } = useAuth();
   const [settings, setSettings] = useState({ bannedWords: [], phase: 'manual', xApiConfigured: false });
   const [newWord, setNewWord] = useState('');
   const [loading, setLoading] = useState(true);
@@ -111,6 +113,21 @@ export default function Settings() {
             <div style={{ fontSize: 13, color: '#1d9bf0', marginTop: 4, fontFamily: t.font }}>Current builds</div>
           </div>
         </div>
+      </div>
+
+      {/* Sign out */}
+      <div style={{ padding: '20px 16px' }}>
+        <button
+          onClick={logout}
+          style={{
+            background: 'none', border: `1px solid ${t.border}`,
+            color: t.textSecondary, fontSize: 14, fontFamily: t.font,
+            padding: '10px 20px', borderRadius: 9999, cursor: 'pointer',
+            width: '100%',
+          }}
+        >
+          sign out
+        </button>
       </div>
     </div>
   );

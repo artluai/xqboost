@@ -155,6 +155,7 @@ export default function Coverage({ sources, tweets }) {
               borderBottom: `1px solid ${t.border}`,
               borderLeft: isPriority ? `3px solid ${t.green}` : '3px solid transparent',
               paddingLeft: isPriority ? 12 : 0,
+		opacity: posted > 0 && drafts === 0 ? 0.5 : 1,
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div onClick={() => setExpandedProject(isExpanded ? null : source.id)} style={{ cursor: 'pointer', flex: 1 }}>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTheme, getDayNumber } from '../theme';
+import '../layout.css';
 
 const NAV = [
   { key: 'queue', label: 'Queue', icon: <><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></> },
@@ -80,43 +81,52 @@ export default function Landing({ onLogin }) {
   const px = 24;
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', minHeight: '100vh', background: t.bg, fontFamily: t.font, color: t.text }}>
-      <div style={{ display: 'flex', width: '100%', maxWidth: 1265 }}>
+    <div className="xq-layout" style={{ background: t.bg, fontFamily: t.font, color: t.text }}>
+      <div className="xq-layout-inner">
 
-        {/* Sidebar */}
-        <div style={{ width: 275, flexShrink: 0, padding: '4px 12px', display: 'flex', flexDirection: 'column', borderRight: `1px solid ${t.border}` }}>
-          <div style={{ padding: '16px 12px 20px', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <svg viewBox="0 0 36 36" width="36" height="36" fill="none"><rect width="36" height="36" rx="8" fill={t.text}/><path d="M8 10.5L13.5 18L8 25.5H11L15 20.25L19 25.5H28L22.5 18L28 10.5H25L21 15.75L17 10.5H8Z" fill="#1d9bf0"/></svg>
-            <span style={{ fontSize: 20, fontWeight: 800 }}>xqboost</span>
-          </div>
-          <nav style={{ flex: 1 }}>
-            {NAV.map(item => (
-              <div key={item.key} onClick={() => setTab(item.key)} onMouseEnter={() => setHovered(item.key)} onMouseLeave={() => setHovered(null)}
-                style={{ display: 'flex', alignItems: 'center', gap: 20, padding: 12, borderRadius: 9999, cursor: 'pointer', marginBottom: 1, fontSize: 20, fontWeight: tab === item.key ? 700 : 400, color: t.text, background: hovered === item.key ? t.surface : 'transparent' }}>
-                <svg width={26} height={26} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={tab === item.key ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round">{item.icon}</svg>
-                <span>{item.label}</span>
-                {item.key === 'queue' && <span style={{ fontSize: 12, fontWeight: 700, color: '#fff', background: '#1d9bf0', borderRadius: 9999, minWidth: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 6px', marginLeft: 'auto' }}>7</span>}
+        {/* Sidebar — hidden on mobile via layout.css */}
+        <aside className="xq-sidebar" style={{ borderRight: `1px solid ${t.border}` }}>
+          <div style={{ padding: '4px 12px', display: 'flex', flexDirection: 'column', height: '100%' }}>
+            <div style={{ padding: '16px 12px 20px', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <svg viewBox="0 0 36 36" width="36" height="36" fill="none"><rect width="36" height="36" rx="8" fill={t.text}/><path d="M8 10.5L13.5 18L8 25.5H11L15 20.25L19 25.5H28L22.5 18L28 10.5H25L21 15.75L17 10.5H8Z" fill="#1d9bf0"/></svg>
+              <span style={{ fontSize: 20, fontWeight: 800 }}>xqboost</span>
+            </div>
+            <nav style={{ flex: 1 }}>
+              {NAV.map(item => (
+                <div key={item.key} onClick={() => setTab(item.key)} onMouseEnter={() => setHovered(item.key)} onMouseLeave={() => setHovered(null)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 20, padding: 12, borderRadius: 9999, cursor: 'pointer', marginBottom: 1, fontSize: 20, fontWeight: tab === item.key ? 700 : 400, color: t.text, background: hovered === item.key ? t.surface : 'transparent' }}>
+                  <svg width={26} height={26} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={tab === item.key ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round">{item.icon}</svg>
+                  <span>{item.label}</span>
+                  {item.key === 'queue' && <span style={{ fontSize: 12, fontWeight: 700, color: '#fff', background: '#1d9bf0', borderRadius: 9999, minWidth: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 6px', marginLeft: 'auto' }}>7</span>}
+                </div>
+              ))}
+              <button onClick={onLogin} style={{ width: 'calc(100% - 24px)', margin: '16px 12px 8px', padding: '14px 24px', borderRadius: 9999, background: t.text, color: t.bg, fontSize: 17, fontWeight: 700, border: 'none', cursor: 'pointer', fontFamily: t.font, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>Sign in to manage</button>
+            </nav>
+            <div style={{ height: 1, background: t.border, margin: '8px 12px' }} />
+            <div style={{ padding: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 44, height: 24, borderRadius: 12, background: t.borderHover, position: 'relative' }}><div style={{ width: 20, height: 20, borderRadius: '50%', background: '#fff', position: 'absolute', top: 2, left: 2, boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} /></div>
+                <span style={{ fontSize: 15, color: t.textSecondary }}><strong style={{ color: t.text, fontWeight: 600 }}>Autopost</strong> off</span>
               </div>
-            ))}
-            <button onClick={onLogin} style={{ width: 'calc(100% - 24px)', margin: '16px 12px 8px', padding: '14px 24px', borderRadius: 9999, background: t.text, color: t.bg, fontSize: 17, fontWeight: 700, border: 'none', cursor: 'pointer', fontFamily: t.font, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>Sign in to manage</button>
-          </nav>
-          <div style={{ height: 1, background: t.border, margin: '8px 12px' }} />
-          <div style={{ padding: 12 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 44, height: 24, borderRadius: 12, background: t.borderHover, position: 'relative' }}><div style={{ width: 20, height: 20, borderRadius: '50%', background: '#fff', position: 'absolute', top: 2, left: 2, boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} /></div>
-              <span style={{ fontSize: 15, color: t.textSecondary }}><strong style={{ color: t.text, fontWeight: 600 }}>Autopost</strong> off</span>
-            </div>
-            <div style={{ padding: '4px 0 12px', fontSize: 13, color: t.textMuted, lineHeight: 1.6 }}>
-              <span style={{ color: t.textSecondary, fontWeight: 600, fontFamily: 'ui-monospace, monospace' }}>day {dayNum} / 100</span>
+              <div style={{ padding: '4px 0 12px', fontSize: 13, color: t.textMuted, lineHeight: 1.6 }}>
+                <span style={{ color: t.textSecondary, fontWeight: 600, fontFamily: 'ui-monospace, monospace' }}>day {dayNum} / 100</span>
+              </div>
             </div>
           </div>
-        </div>
+        </aside>
 
         {/* Main feed */}
-        <main style={{ flex: 1, minWidth: 0, maxWidth: 620, borderLeft: `1px solid ${t.border}`, borderRight: `1px solid ${t.border}`, overflowY: 'auto' }}>
-          <div style={{ padding: '20px 24px', borderBottom: `1px solid ${t.border}`, position: 'sticky', top: 0, background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(12px)', zIndex: 10 }}>
-            <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>{headers[tab].title}</h1>
-            <div style={{ fontSize: 13, color: t.textSecondary, marginTop: 6 }}>{headers[tab].sub}</div>
+        <main className="xq-main" style={{ borderLeft: `1px solid ${t.border}`, borderRight: `1px solid ${t.border}` }}>
+          {/* Sticky header with sign-in on mobile */}
+          <div style={{ padding: '20px 24px', borderBottom: `1px solid ${t.border}`, position: 'sticky', top: 0, background: t.name === 'dark' ? 'rgba(8,9,10,0.85)' : 'rgba(255,255,255,0.85)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', zIndex: 10 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>{headers[tab].title}</h1>
+                <div style={{ fontSize: 13, color: t.textSecondary, marginTop: 6 }}>{headers[tab].sub}</div>
+              </div>
+              {/* Sign in button — visible on mobile when sidebar is hidden */}
+              <button className="xq-mobile-signin" onClick={onLogin} style={{ background: t.text, color: t.bg, border: 'none', padding: '8px 16px', borderRadius: 9999, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: t.font, whiteSpace: 'nowrap' }}>Sign in</button>
+            </div>
           </div>
 
           {/* QUEUE VIEW */}
@@ -156,7 +166,6 @@ export default function Landing({ onLogin }) {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', border: `1px solid ${t.border}`, borderRadius: 6, overflow: 'hidden' }}>
               {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d => <div key={d} style={{ background: t.surface, padding: 8, textAlign: 'center', fontSize: 12, color: '#536471', fontWeight: 500, borderBottom: `1px solid ${t.border}` }}>{d}</div>)}
-              {/* pad + days 16-31 */}
               {[16,17].map(d => <div key={d} style={{ background: t.bg, padding: 6, minHeight: 80, opacity: 0.15, borderBottom: `1px solid ${t.border}`, borderRight: `1px solid ${t.border}` }}><span style={{ fontSize: 11, color: '#536471' }}>{d}</span></div>)}
               {Array.from({length: 14}, (_, i) => {
                 const d = i + 18;
@@ -164,7 +173,7 @@ export default function Landing({ onLogin }) {
                 const isToday = info?.today;
                 const isFuture = d > 24;
                 return (
-                  <div key={d} style={{ background: isToday ? '#f0fdf4' : t.bg, padding: 6, minHeight: 80, opacity: isFuture ? 0.3 : 1, borderBottom: `1px solid ${t.border}`, borderRight: (i + 2 + 1) % 7 !== 0 ? `1px solid ${t.border}` : 'none', borderLeft: isToday ? '2px solid #22c55e' : 'none' }}>
+                  <div key={d} style={{ background: isToday ? (t.name === 'light' ? '#f0fdf4' : '#041a0e') : t.bg, padding: 6, minHeight: 80, opacity: isFuture ? 0.3 : 1, borderBottom: `1px solid ${t.border}`, borderRight: (i + 2 + 1) % 7 !== 0 ? `1px solid ${t.border}` : 'none', borderLeft: isToday ? '2px solid #22c55e' : 'none' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                       <span style={{ fontSize: 11, color: isToday ? t.text : '#536471', fontWeight: isToday ? 600 : 400 }}>{d > 31 ? d-31 : d}</span>
                       {info?.dn && <span style={{ fontSize: 10, color: '#22c55e', fontWeight: 600 }}>{isToday ? `today d${info.dn}` : `d${info.dn}`}</span>}
@@ -188,7 +197,7 @@ export default function Landing({ onLogin }) {
             {PROJECTS.map((p, i) => (
               <div key={i} style={{ padding: '14px 0', borderBottom: `1px solid ${t.border}`, borderLeft: p.priority ? '3px solid #22c55e' : '3px solid transparent', paddingLeft: p.priority ? 12 : 0 }}>
                 <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 4 }}>{p.name}</div>
-                <div style={{ display: 'flex', gap: 12, fontSize: 13 }}>
+                <div style={{ display: 'flex', gap: 12, fontSize: 13, flexWrap: 'wrap' }}>
                   <span style={{ color: '#536471' }}>day {p.day}</span>
                   {p.posted > 0 && <span style={{ color: '#1d9bf0' }}>{p.posted} posted</span>}
                   {p.drafts > 0 && <span style={{ color: '#c2a300' }}>{p.drafts} in queue</span>}
@@ -218,29 +227,33 @@ export default function Landing({ onLogin }) {
             <div style={{ padding: `20px ${px}px`, borderBottom: `1px solid ${t.border}` }}>
               <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>Posting mode</div>
               <div style={{ fontSize: 13, color: '#536471', marginBottom: 16 }}>Controls how tweets get posted.</div>
-              {[{ key: 'manual', label: 'manual', desc: 'Copy-paste to X yourself, mark as posted.', active: true }, { key: 'approved', label: 'approved', desc: 'Review drafts, click post — bot posts via X API.' }, { key: 'auto', label: 'full auto', desc: 'Bot generates and posts automatically.' }].map(p => (
-                <div key={p.key} style={{ display: 'flex', gap: 12, padding: '12px 0', borderBottom: `1px solid ${t.border}`, alignItems: 'center' }}>
-                  <div style={{ width: 20, height: 20, borderRadius: '50%', border: `2px solid ${p.active ? '#00ba7c' : t.borderHover}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{p.active && <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#00ba7c' }} />}</div>
-                  <div><div style={{ fontSize: 15, fontWeight: p.active ? 700 : 600, color: p.active ? '#07694a' : t.text }}>{p.label}</div><div style={{ fontSize: 13, color: '#536471' }}>{p.desc}</div></div>
+              {[{ key: 'manual', label: 'manual', desc: 'Copy-paste to X yourself, mark as posted.', active: true }, { key: 'approved', label: 'approved', desc: 'Review drafts, click post — bot posts via X API.' }, { key: 'auto', label: 'full auto', desc: 'Bot generates and posts automatically.' }].map(m => (
+                <div key={m.key} style={{ padding: '12px 14px', border: `1px solid ${m.active ? '#22c55e' : t.border}`, borderRadius: 6, marginBottom: 8, background: m.active ? (t.name === 'light' ? '#f0fdf4' : '#041a0e') : 'transparent' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 10, height: 10, borderRadius: '50%', background: m.active ? '#22c55e' : 'transparent', border: `2px solid ${m.active ? '#22c55e' : '#9aa0a6'}` }} />
+                    <span style={{ fontSize: 14, fontWeight: m.active ? 600 : 400, color: m.active ? '#22c55e' : t.text }}>{m.label}</span>
+                  </div>
+                  <div style={{ fontSize: 13, color: '#536471', marginTop: 4, paddingLeft: 18 }}>{m.desc}</div>
                 </div>
               ))}
             </div>
             <div style={{ padding: `20px ${px}px`, borderBottom: `1px solid ${t.border}` }}>
-              <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>X API</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 0', fontSize: 14 }}><span style={{ width: 10, height: 10, borderRadius: '50%', background: '#00ba7c' }} /><strong>Connected</strong><span style={{ color: '#536471' }}>@Artlu157291 · Read and write</span></div>
-            </div>
-            <div style={{ padding: `20px ${px}px`, borderBottom: `1px solid ${t.border}` }}>
               <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>Schedule</div>
-              <div style={{ display: 'flex', gap: 0, border: `1px solid ${t.border}`, overflow: 'hidden', marginTop: 12 }}>
-                <div style={{ flex: 1, padding: 14, borderRight: `1px solid ${t.border}` }}><div style={{ fontWeight: 600, fontSize: 15 }}>Morning slot</div><div style={{ fontSize: 13, color: '#536471', marginTop: 2 }}>9:00 AM (+ random delay)</div><div style={{ fontSize: 13, color: '#00ba7c', marginTop: 4 }}>Archive backlog</div></div>
-                <div style={{ flex: 1, padding: 14 }}><div style={{ fontWeight: 600, fontSize: 15 }}>Evening slot</div><div style={{ fontSize: 13, color: '#536471', marginTop: 2 }}>9:00 PM (+ random delay)</div><div style={{ fontSize: 13, color: '#1d9bf0', marginTop: 4 }}>Current builds</div></div>
+              <div style={{ fontSize: 13, color: '#536471', marginBottom: 16 }}>When tweets get posted.</div>
+              <div style={{ display: 'flex', gap: 16 }}>
+                <div style={{ flex: 1, padding: 14, border: `1px solid ${t.border}`, borderRadius: 6 }}>
+                  <div style={{ fontWeight: 600, fontSize: 15 }}>Morning slot</div><div style={{ fontSize: 13, color: '#536471', marginTop: 2 }}>9:00 AM (+ random delay)</div><div style={{ fontSize: 13, color: '#22c55e', marginTop: 4 }}>Archive backlog</div>
+                </div>
+                <div style={{ flex: 1, padding: 14, border: `1px solid ${t.border}`, borderRadius: 6 }}>
+                  <div style={{ fontWeight: 600, fontSize: 15 }}>Evening slot</div><div style={{ fontSize: 13, color: '#536471', marginTop: 2 }}>9:00 PM (+ random delay)</div><div style={{ fontSize: 13, color: '#1d9bf0', marginTop: 4 }}>Current builds</div>
+                </div>
               </div>
             </div>
           </div>}
         </main>
 
-        {/* Right panel */}
-        <div style={{ width: 350, flexShrink: 0, borderLeft: `1px solid ${t.border}`, paddingBottom: 40 }}>
+        {/* Right panel — hidden below 1100px via layout.css */}
+        <aside className="xq-right" style={{ borderLeft: `1px solid ${t.border}`, paddingBottom: 40 }}>
           <div style={{ fontSize: 20, fontWeight: 800, padding: '16px 20px 8px' }}>Pipeline</div>
           <div style={{ padding: '0 20px 16px', borderBottom: `1px solid ${t.border}` }}>
             {[{ l: 'Drafts', v: '7', c: '#c2a300' }, { l: 'Approved', v: '0', c: '#00ba7c' }, { l: 'Posted', v: '3', c: '#1d9bf0' }, { l: 'Progress', v: `${Math.round((dayNum/100)*100)}%`, c: t.text }].map((r,i) => (
@@ -257,8 +270,32 @@ export default function Landing({ onLogin }) {
           <div style={{ padding: '0 20px 20px' }}>
             {TRACKING.map((s,i) => <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', fontSize: 14 }}><span style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: s.tweets > 0 ? '#00ba7c' : '#f4212e' }} /><span style={{ flex: 1, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{s.name}</span><span style={{ color: t.textMuted, fontFamily: 'ui-monospace, monospace', flexShrink: 0 }}>{s.tweets}</span></div>)}
           </div>
-        </div>
+        </aside>
+
       </div>
+
+      {/* Mobile bottom nav — shown below 768px via layout.css */}
+      <nav className="xq-mobnav" style={{ background: t.bg, borderTop: `1px solid ${t.border}` }}>
+        <div className="xq-mobnav-inner">
+          {NAV.map(item => (
+            <div
+              key={item.key}
+              onClick={() => setTab(item.key)}
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+                fontSize: 11, cursor: 'pointer', padding: '4px 12px',
+                color: tab === item.key ? t.text : t.textSecondary,
+                fontFamily: t.font,
+              }}
+            >
+              <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={tab === item.key ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round">
+                {item.icon}
+              </svg>
+              {item.label}
+            </div>
+          ))}
+        </div>
+      </nav>
     </div>
   );
 }
