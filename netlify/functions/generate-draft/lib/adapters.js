@@ -60,14 +60,19 @@ const ADAPTERS = {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
         body: JSON.stringify({
           model: 'kimi-k2.5',
-          max_tokens: 1000,
-          temperature: 0.7,
+          max_tokens: 4096,
+          temperature: 0.6,
+          top_p: 0.95,
           thinking: { type: 'disabled' },
           messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }],
         }),
       });
 
-      if (!res.ok) throw new Error(`kimi-k2.5 API ${res.status}`);
+      if (!res.ok) {
+        const errBody = await res.text().catch(() => '');
+        console.error(`[generate-draft] kimi error body: ${errBody}`);
+        throw new Error(`kimi-k2.5 API ${res.status}`);
+      }
       const data = await res.json();
       const content = data.choices?.[0]?.message?.content || '';
       if (!content) throw new Error('empty response from kimi-k2.5');
