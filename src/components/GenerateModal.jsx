@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useTheme, getDayNumber } from '../theme';
 import { addTweet } from '../hooks/useTweets';
@@ -32,6 +32,19 @@ export default function GenerateModal({ open, onClose }) {
   const [modelStatus, setModelStatus] = useState({});
 
   const dayNum = getDayNumber(new Date());
+
+  // Load default model from settings
+  useEffect(() => {
+    if (!open) return;
+    (async () => {
+      try {
+        const snap = await getDoc(doc(db, 'settings', 'global'));
+        if (snap.exists() && snap.data().defaultModel) {
+          setSelectedModel(snap.data().defaultModel);
+        }
+      } catch (e) {}
+    })();
+  }, [open]);
 
   // Load sources + topics
   useEffect(() => {

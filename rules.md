@@ -69,6 +69,7 @@ read personality.md before writing any journal content.
 - filter out paused/duplicate sources in all UI views and draft generation.
 - tweets: statuses are 'draft', 'approved', 'posted', 'dismissed'. dismissed counts — don't regenerate.
 - apiKeys: per-user encrypted API keys. `apiKeys/{uid}` stores `{ 'claude-sonnet': encrypted, 'gpt-4o': encrypted, ... }`. see best-practices.md for encryption pattern.
+- settings/global: includes `defaultModel` field (`claude-sonnet | gpt-4o | kimi-k2.5`). the generate modal reads this on open to pre-select the model. falls back to `claude-sonnet` if not set.
 - schema decisions are permanent-ish. think before adding fields.
 
 ## draft generation
@@ -89,7 +90,8 @@ there are TWO generation paths. they coexist. don't merge them.
 
 - triggered from the UI via the "Draft tweet" modal
 - supports multiple models: Claude Sonnet, GPT-4o, Kimi K2.5
-- "bot picks for me" is the default — pre-selected, zero-click generate
+- default model is configurable in Settings → saved to `settings/global.defaultModel` → modal pre-selects it. user can override per-draft.
+- "bot picks for me" is the default project — pre-selected, zero-click generate
 - auth: Firebase ID token + OWNER_UID allowlist
 - reads API keys from: user's encrypted keys in Firestore first, then env var fallback
 - fetches x-voice.md from GitHub raw URL at runtime

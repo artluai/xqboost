@@ -87,6 +87,35 @@ export default function Settings() {
         </div>
       </div>
 
+      {/* Default model */}
+      <div style={sectionStyle}>
+        <div style={titleStyle}>Default model</div>
+        <div style={descStyle}>Which AI generates drafts by default. You can still switch per-draft in the modal.</div>
+        {[
+          { key: 'claude-sonnet', label: 'Claude Sonnet', desc: 'Anthropic. Fast, reliable. ~3 seconds.' },
+          { key: 'gpt-4o', label: 'GPT-4o', desc: 'OpenAI. Requires API key.' },
+          { key: 'kimi-k2.5', label: 'Kimi K2.5', desc: 'Moonshot. Thinking model, instant mode. ~5 seconds.' },
+        ].map(m => (
+          <div key={m.key} onClick={() => save({ defaultModel: m.key })} style={{
+            display: 'flex', alignItems: 'center', gap: 12,
+            padding: '12px 0', borderBottom: `1px solid ${t.border}`,
+            cursor: 'pointer', transition: 'background 0.1s',
+          }}>
+            <div style={{
+              width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
+              border: `2px solid ${(settings.defaultModel || 'claude-sonnet') === m.key ? '#1d9bf0' : t.borderHover}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              {(settings.defaultModel || 'claude-sonnet') === m.key && <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#1d9bf0' }} />}
+            </div>
+            <div>
+              <div style={{ fontSize: 15, fontWeight: (settings.defaultModel || 'claude-sonnet') === m.key ? 700 : 600, color: (settings.defaultModel || 'claude-sonnet') === m.key ? '#1d9bf0' : t.text, fontFamily: t.font }}>{m.label}</div>
+              <div style={{ fontSize: 13, color: t.textSecondary, fontFamily: t.font }}>{m.desc}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
       {/* AI Models — NEW */}
       <AIModelsSection />
 
