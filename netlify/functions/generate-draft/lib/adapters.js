@@ -49,7 +49,31 @@ function createOpenAIAdapter({ name, envKey, baseURL, model }) {
 const ADAPTERS = {
   'claude-sonnet': anthropicAdapter,
   'gpt-4o': createOpenAIAdapter({ name: 'gpt-4o', envKey: 'OPENAI_API_KEY', baseURL: 'https://api.openai.com/v1', model: 'gpt-4o' }),
-  'kimi-k2.5': createOpenAIAdapter({ name: 'kimi-k2.5', envKey: 'KIMI_API_KEY', baseURL: 'https://api.moonshot.ai/v1', model: 'kimi-k2.5' }),
+  'kimi-k2.5': {
+    name: 'kimi-k2.5',
+    async generate(systemPrompt, userPrompt, apiKey) {
+      const key = apiKey || process.env.KIMI_API_KEY;
+      if (!key) throw new Error('KIMI_API_KEY not configured');
+
+      const res = await fetch('https://api.moonshot.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+        body: JSON.stringify({
+          model: 'kimi-k2.5',
+          max_tokens: 1000,
+          temperature: 0.7,
+          thinking: { type: 'disabled' },
+          messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }],
+        }),
+      });
+
+      if (!res.ok) throw new Error(`kimi-k2.5 API ${res.status}`);
+      const data = await res.json();
+      const content = data.choices?.[0]?.message?.content || '';
+      if (!content) throw new Error('empty response from kimi-k2.5');
+      return { content: content.trim(), model: 'kimi-k2.5' };
+    },
+  },
 };
 
 const MODEL_ENV_KEYS = {
