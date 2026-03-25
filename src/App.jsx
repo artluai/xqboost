@@ -9,6 +9,7 @@ import Sidebar, { icons, NAV_ITEMS } from './components/Sidebar';
 import RightPanel from './components/RightPanel';
 import Header from './components/Header';
 import Landing from './components/Landing';
+import GenerateModal from './components/GenerateModal';
 import Queue from './views/Queue';
 import Calendar from './views/Calendar';
 import Coverage from './views/Coverage';
@@ -20,6 +21,7 @@ export default function App() {
   const { user, login } = useAuth();
   const [activeTab, setActiveTab] = useState('queue');
   const [showCompose, setShowCompose] = useState(false);
+  const [showGenModal, setShowGenModal] = useState(false);
   const { tweets } = useTweets();
   const [sources, setSources] = useState([]);
   const [noteCount, setNoteCount] = useState(0);
@@ -55,8 +57,7 @@ export default function App() {
   if (!user) return <Landing onLogin={login} />;
 
   const handleCompose = () => {
-    setActiveTab('queue');
-    setShowCompose(true);
+    setShowGenModal(true);
   };
 
   return (
@@ -114,6 +115,9 @@ export default function App() {
           ))}
         </div>
       </nav>
+
+      {/* Generate modal */}
+      <GenerateModal open={showGenModal} onClose={() => setShowGenModal(false)} />
     </div>
   );
 }

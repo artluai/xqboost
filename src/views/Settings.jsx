@@ -3,6 +3,7 @@ import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useTheme } from '../theme';
 import { useAuth } from '../auth';
+import AIModelsSection from '../components/AIModelsSection';
 
 export default function Settings() {
   const { t } = useTheme();
@@ -85,6 +86,9 @@ export default function Settings() {
           <button onClick={addBanned} style={{ padding: '10px 20px', borderRadius: 9999, background: t.btnPrimary, color: t.btnPrimaryText, fontWeight: 700, border: 'none', cursor: 'pointer', fontSize: 14, fontFamily: t.font }}>Add</button>
         </div>
       </div>
+
+      {/* AI Models — NEW */}
+      <AIModelsSection />
 
       {/* X API */}
       <div style={sectionStyle}>
