@@ -395,7 +395,7 @@ export default function GenerateModal({ open, onClose }) {
                 </div>
 
                 {/* Scrollable project list */}
-                <div style={{ border: `1px solid ${t.border}`, borderRadius: t.radiusSm, maxHeight: 280, overflowY: 'auto' }}>
+                <div className="xq-dropdown" style={{ border: `1px solid ${t.border}`, borderRadius: t.radiusSm, maxHeight: 280, overflowY: 'auto', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
                   {filteredSources.needsTweets.length > 0 && <>
                     <div style={{ padding: '8px 14px 4px', fontSize: 11, fontWeight: 600, color: t.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, position: 'sticky', top: 0, background: t.bg, zIndex: 1, borderBottom: `1px solid ${t.border}`, fontFamily: t.font }}>Needs tweets</div>
                     {filteredSources.needsTweets.map(renderSourceOption)}
@@ -455,7 +455,7 @@ export default function GenerateModal({ open, onClose }) {
                     {selectedSource === '__bot_picks__' ? "bot's choice" : sources.find(s => s.id === selectedSource)?.name || 'unknown'}
                   </strong><br />via {MODELS.find(m => m.key === selectedModel)?.name}...
                 </div>
-                <style>{`@keyframes xq-spin { to { transform: rotate(360deg); } }`}</style>
+                <style>{`@keyframes xq-spin { to { transform: rotate(360deg); } } .xq-dropdown::-webkit-scrollbar { display: none; }`}</style>
               </div>
             )}
 

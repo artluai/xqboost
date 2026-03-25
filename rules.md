@@ -56,6 +56,7 @@ read personality.md before writing any journal content.
 - all components use the dual theme system (light SaaS default, dark terminal).
 - don't break what's already working. changes should be surgical.
 - always show mockups before writing code. confirm changes before building.
+- "fix it now" / "quick fix" / any urgency still means: mockup first, confirm, then build. urgency changes the speed, not the process. the mockup IS the first step of fixing, not a delay before fixing. no exceptions.
 
 ## responsive rules
 
